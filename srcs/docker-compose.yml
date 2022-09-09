@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    image: mariadb:mariadb
+    restart: always
+    networks:
+      - geldiss-net
+    volumes:
+      - mariadb:/var/lib/mysql
+    env_file:
+      - .env
+  wordpress:
+    depends_on:
+      - mariadb
+    container_name: wordpress
+    build: ./requirements/wordpress
+    image: wordpress:wordpress
+    restart: always
+    networks:
+      - geldiss-net
+    env_file:
+      - .env
+    volumes:
+      - wordpress:/var/www/html
+  nginx:
+    depends_on:
+      - wordpress
+    container_name: nginx
+    build: ./requirements/nginx
+    image: nginx:nginx
+    restart: always
+    networks:
+      - geldiss-net
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress:/var/www/html
+    env_file:
+      - .env
+
+volumes:
+  mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/geldiss/data/mariadb
+  wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/geldiss/data/wordpress
+
+networks:
+  geldiss-net:
+    driver: bridge
